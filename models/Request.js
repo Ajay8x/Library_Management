@@ -6,7 +6,8 @@ const requestSchema = new mongoose.Schema({
     username: { type: String },
     usertype: { type: String },
     bookname: { type: String },
-    issuedays: { type: Number }
+    issuedays: { type: Number },
+    requestType: { type: String, enum: ['issue', 'return'], default: 'issue' }
 });
 
 requestSchema.virtual('id').get(function() { return this._id.toHexString(); });

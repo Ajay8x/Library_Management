@@ -72,7 +72,9 @@ router.delete('/admins/:id', isSuperAdmin, userController.deleteAdmin);
 // Requests & Issues
 router.get('/requests', isAdmin, requestController.getRequests);
 router.post('/requests', isAuthenticated, requestController.addRequest);
+router.post('/return-request', isAuthenticated, requestController.addReturnRequest);
 router.post('/approve-request', isAdmin, requestController.approveRequest);
+router.post('/reject-request', isAdmin, requestController.rejectRequest);
 router.get('/issues/:userid', isAuthenticated, requestController.getIssues);
 
 module.exports = router;

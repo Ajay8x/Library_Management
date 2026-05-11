@@ -390,13 +390,14 @@
 
                 <!-- Section: Requests -->
                 <div id="section-requests" class="dashboard-section d-none">
-                    <h2>Pending Requests</h2>
+                    <h2>Issue Requests</h2>
                     <div class="table-container glass-card">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Student</th>
                                     <th>Book</th>
+                                    <th>Type</th>
                                     <th>Days</th>
                                     <th>Actions</th>
                                 </tr>
@@ -405,6 +406,26 @@
                         </table>
                     </div>
                     <div id="requests-pagination"></div>
+                </div>
+
+                <!-- Section: Returns -->
+                <div id="section-returns" class="dashboard-section d-none">
+                    <h2>Return Requests</h2>
+                    <div class="table-container glass-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Book</th>
+                                    <th>Type</th>
+                                    <th>Days</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returns-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="returns-pagination"></div>
                 </div>
 
                 <!-- Section: My Books -->
@@ -418,6 +439,7 @@
                                     <th>Issue Date</th>
                                     <th>Return Date</th>
                                     <th>Fine</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="my-books-table-body"></tbody>

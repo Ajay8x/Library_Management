@@ -9,7 +9,8 @@ const issueSchema = new mongoose.Schema({
     issuedays: { type: Number },
     issuedate: { type: String },
     issuereturn: { type: String },
-    fine: { type: Number, default: 0 }
+    fine: { type: Number, default: 0 },
+    status: { type: String, enum: ['issued', 'return-pending'], default: 'issued' }
 });
 
 issueSchema.virtual('id').get(function() { return this._id.toHexString(); });

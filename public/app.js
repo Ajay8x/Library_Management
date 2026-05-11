@@ -202,6 +202,7 @@ function showSection(sectionId) {
     if (sectionId === 'books') loadBooks();
     if (sectionId === 'users') loadUsers();
     if (sectionId === 'requests') loadRequests();
+    if (sectionId === 'returns') loadReturns();
     if (sectionId === 'mybooks') loadMyBooks();
     if (sectionId === 'admins') loadAdmins();
     if (sectionId === 'search') loadSearch();
@@ -209,8 +210,8 @@ function showSection(sectionId) {
 
 // --- Pagination State ---
 const ITEMS_PER_PAGE = 8;
-let currentPages = { books: 1, users: 1, requests: 1, mybooks: 1, admins: 1, search: 1 };
-let listData = { books: [], users: [], requests: [], mybooks: [], admins: [], search: [] };
+let currentPages = { books: 1, users: 1, requests: 1, returns: 1, mybooks: 1, admins: 1, search: 1 };
+let listData = { books: [], users: [], requests: [], returns: [], mybooks: [], admins: [], search: [] };
 
 function renderPagination(totalItems, sectionKey, containerId) {
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
@@ -257,6 +258,7 @@ function changePage(sectionKey, newPage) {
     if (sectionKey === 'books') renderBooks();
     if (sectionKey === 'users') renderUsers();
     if (sectionKey === 'requests') renderRequests();
+    if (sectionKey === 'returns') renderReturns();
     if (sectionKey === 'mybooks') renderMyBooks();
     if (sectionKey === 'admins') renderAdmins();
     if (sectionKey === 'search') renderSearchResults();
@@ -270,7 +272,7 @@ function getFilteredData(sectionKey) {
         if (sectionKey === 'books') return item.bookname?.toLowerCase().includes(q) || item.bookaudor?.toLowerCase().includes(q) || item.serial?.toLowerCase().includes(q);
         if (sectionKey === 'users') return item.name?.toLowerCase().includes(q) || item.email?.toLowerCase().includes(q);
         if (sectionKey === 'admins') return item.email?.toLowerCase().includes(q) || item.role?.toLowerCase().includes(q);
-        if (sectionKey === 'requests') return item.username?.toLowerCase().includes(q) || item.bookname?.toLowerCase().includes(q);
+        if (sectionKey === 'requests' || sectionKey === 'returns') return item.username?.toLowerCase().includes(q) || item.bookname?.toLowerCase().includes(q);
         if (sectionKey === 'mybooks') return item.issuebook?.toLowerCase().includes(q);
         return true;
     });
@@ -292,6 +294,7 @@ document.getElementById('global-search')?.addEventListener('input', (e) => {
         if (activeSection === 'books') renderBooks();
         if (activeSection === 'users') renderUsers();
         if (activeSection === 'requests') renderRequests();
+        if (activeSection === 'returns') renderReturns();
         if (activeSection === 'mybooks') renderMyBooks();
         if (activeSection === 'admins') renderAdmins();
         if (activeSection === 'search') renderSearchResults();
@@ -697,7 +700,9 @@ function renderUsers() {
 async function loadRequests() {
     showLoader();
     try {
-        listData.requests = await (await fetch(`${API_URL}/requests`, { credentials: 'include' })).json();
+        const allRequests = await (await fetch(`${API_URL}/requests`, { credentials: 'include' })).json();
+        // Filter out return requests
+        listData.requests = allRequests.filter(req => req.requestType !== 'return');
         currentPages.requests = 1;
         renderRequests();
     } finally {
@@ -713,16 +718,64 @@ function renderRequests() {
 
     paginatedRequests.forEach(req => {
         const tr = document.createElement('tr');
+        const typeBadge = 'bg-info';
         tr.innerHTML = `
             <td>${req.username}</td>
             <td>${req.bookname}</td>
+            <td><span class="badge ${typeBadge}">${req.requestType || 'issue'}</span></td>
             <td>${req.issuedays}</td>
-            <td><button class="primary-btn" style="width:auto; padding:5px 15px" onclick="approveRequest('${req.id}')">Approve</button></td>
+            <td>
+                <div class="d-flex gap-2">
+                    <button class="primary-btn" style="width:auto; padding:5px 15px" onclick="approveRequest('${req.id}')">Approve</button>
+                    <button class="secondary-btn" style="width:auto; padding:5px 15px; background:#ef4444; border:none" onclick="rejectRequest('${req.id}')">Reject</button>
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
     
     renderPagination(getFilteredData('requests').length, 'requests', 'requests-pagination');
+}
+
+async function loadReturns() {
+    showLoader();
+    try {
+        const allRequests = await (await fetch(`${API_URL}/requests`, { credentials: 'include' })).json();
+        // Filter for ONLY return requests
+        listData.returns = allRequests.filter(req => req.requestType === 'return');
+        currentPages.returns = 1;
+        renderReturns();
+    } finally {
+        hideLoader();
+    }
+}
+
+function renderReturns() {
+    const tbody = document.getElementById('returns-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    const paginatedReturns = getPaginatedData('returns');
+
+    paginatedReturns.forEach(req => {
+        const tr = document.createElement('tr');
+        const typeBadge = 'bg-warning';
+        tr.innerHTML = `
+            <td>${req.username}</td>
+            <td>${req.bookname}</td>
+            <td><span class="badge ${typeBadge}">${req.requestType}</span></td>
+            <td>${req.issuedays}</td>
+            <td>
+                <div class="d-flex gap-2">
+                    <button class="primary-btn" style="width:auto; padding:5px 15px" onclick="approveRequest('${req.id}')">Approve</button>
+                    <button class="secondary-btn" style="width:auto; padding:5px 15px; background:#ef4444; border:none" onclick="rejectRequest('${req.id}')">Reject</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    renderPagination(getFilteredData('returns').length, 'returns', 'returns-pagination');
 }
 
 async function loadMyBooks() {
@@ -744,11 +797,18 @@ function renderMyBooks() {
 
     paginatedMyBooks.forEach(issue => {
         const tr = document.createElement('tr');
+        const isPending = issue.status === 'return-pending';
         tr.innerHTML = `
             <td>${issue.issuebook}</td>
             <td>${issue.issuedate}</td>
             <td>${issue.issuereturn}</td>
             <td>₹${issue.fine}</td>
+            <td>
+                ${isPending ? 
+                    `<span class="badge bg-warning">Return Pending</span>` : 
+                    `<button class="primary-btn" style="width:auto; padding:5px 15px" onclick="returnBook('${issue.bookid}', '${issue.id}')">Return</button>`
+                }
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -812,7 +872,53 @@ async function approveRequest(requestId) {
             body: JSON.stringify({ requestId }),
             credentials: 'include'
         });
-        if (res.ok) loadRequests();
+        if (res.ok) {
+            showAlert('Request approved successfully!', 'success');
+            if (activeSection === 'returns') loadReturns();
+            else loadRequests();
+        }
+    } finally {
+        hideLoader();
+    }
+}
+
+async function rejectRequest(requestId) {
+    if (!confirm('Are you sure you want to reject this request?')) return;
+    showLoader();
+    try {
+        const res = await fetch(`${API_URL}/reject-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId }),
+            credentials: 'include'
+        });
+        if (res.ok) {
+            showAlert('Request rejected', 'success');
+            if (activeSection === 'returns') loadReturns();
+            else loadRequests();
+        }
+    } finally {
+        hideLoader();
+    }
+}
+
+async function returnBook(bookid, issueId) {
+    if (!confirm('Are you sure you want to request a return for this book?')) return;
+    showLoader();
+    try {
+        const res = await fetch(`${API_URL}/return-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userid: currentUser.id, bookid, issueId }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showAlert('Return request sent to admin!', 'success');
+            loadMyBooks();
+        } else {
+            showAlert(data.message || 'Failed to send return request', 'error');
+        }
     } finally {
         hideLoader();
     }
