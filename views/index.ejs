@@ -1,0 +1,499 @@
+<%- include('partials/header') %>
+
+        <!-- Auth View -->
+        <section id="auth-view" class="view d-flex">
+            <!-- Global Theme Toggle (Top Right) -->
+            <div class="position-absolute top-0 end-0 p-4" style="z-index: 10;">
+                <button class="btn btn-outline-light rounded-circle d-flex align-items-center justify-content-center" id="theme-toggle-auth" onclick="toggleTheme()" style="width: 45px; height: 45px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            
+            <div class="glass-card login-container">
+                <div class="brand">
+                    <div class="logo">L</div>
+                    <h1>SMART<span>Library</span></h1>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchAuthRole('student')">Student</button>
+                    <button class="tab-btn" onclick="switchAuthRole('admin')">Admin</button>
+                    <button class="tab-btn" onclick="switchAuthRole('superadmin')">Super Admin</button>
+                </div>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" placeholder="name@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="••••••••" required>
+                            <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="primary-btn">Sign In</button>
+                    <p id="login-error" class="error-msg"></p>
+                </form>
+            </div>
+        </section>
+
+        <!-- Main Dashboard View (Hidden by default) -->
+        <section id="dashboard-view" class="view d-none flex-column">
+            <%- include('partials/navbar') %>
+
+            <main class="content container py-5 flex-grow-1">
+                <header class="d-flex justify-content-between align-items-center mb-5">
+                    <h1 id="section-title" class="display-5 fw-bold mb-0 d-none">Dashboard</h1>
+                    <div class="search-bar d-none d-md-flex align-items-center px-4 py-2 rounded-pill glass-card ms-auto" style="width: 350px;">
+                        <i class="fas fa-search opacity-50 me-2"></i>
+                        <input type="text" id="global-search" class="bg-transparent border-0 w-100 outline-none" style="color: var(--text-main);" placeholder="Search...">
+                    </div>
+                </header>
+
+                <!-- Section: Home -->
+                <div id="section-home" class="dashboard-section">
+                    <div class="stats-grid">
+                        <div class="stat-card glass-card">
+                            <h3>Total Books</h3>
+                            <p id="stat-total-books">0</p>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <h3>Issued Books</h3>
+                            <p id="stat-issued-books">0</p>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <h3>Active Students</h3>
+                            <p id="stat-active-users">0</p>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <h3>Pending Requests</h3>
+                            <p id="stat-pending-requests">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts -->
+                    <div class="charts-grid mt-4">
+                        <div class="chart-card glass-card">
+                            <div class="chart-header">
+                                <h3><i class="fas fa-chart-pie me-2"></i>Book Availability</h3>
+                                <span class="chart-badge">Overview</span>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="bookAvailabilityChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card glass-card">
+                            <div class="chart-header">
+                                <h3><i class="fas fa-chart-bar me-2"></i>Branch Distribution</h3>
+                                <span class="chart-badge">Categories</span>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="branchChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Books -->
+                <div id="section-books" class="dashboard-section d-none">
+                    <div class="section-header">
+                        <h2>Library Catalog</h2>
+                        <button class="primary-btn admin-only" onclick="showSection('add-book')">+ Add Book</button>
+                    </div>
+                    <div class="book-grid" id="book-list"></div>
+                    <div id="books-pagination"></div>
+                </div>
+
+                <!-- Section: Add Book -->
+                <div id="section-add-book" class="dashboard-section d-none">
+                    <button class="back-btn mb-4" onclick="showSection('books')">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Catalog
+                    </button>
+                    <div class="glass-card p-4 p-md-5 mx-auto" style="max-width: 900px;">
+                        <div class="modal-header-custom mb-4">
+                            <h2 class="m-0" style="font-family: 'Outfit', sans-serif;">
+                                <i class="fas fa-plus-circle me-3" style="color: var(--primary)"></i>Add New Library Book
+                            </h2>
+                            <p class="text-dim mt-2">Enter the details below to register a new book in the system</p>
+                        </div>
+                        <form id="add-book-form" enctype="multipart/form-data">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-hashtag me-2"></i>Serial Number</label>
+                                        <input type="text" name="serial" placeholder="e.g. SN123" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-book me-2"></i>Book Name</label>
+                                        <input type="text" name="bookname" placeholder="Enter book title" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-image me-2"></i>Cover Photo (Upload OR URL)</label>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <div style="flex: 1">
+                                                <input type="file" name="bookphoto" id="bookphoto" accept="image/*" class="form-control-sm">
+                                            </div>
+                                            <span class="badge bg-secondary">OR</span>
+                                            <div style="flex: 1">
+                                                <input type="text" name="bookpic" id="bookpic-url" placeholder="https://image-url.com">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-user-pen me-2"></i>Author</label>
+                                        <input type="text" name="bookaudor" placeholder="Author name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-building me-2"></i>Publisher</label>
+                                        <input type="text" name="bookpub" placeholder="Publishing house">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-code-branch me-2"></i>Branch</label>
+                                        <input type="text" name="branch" placeholder="e.g. CS, IT">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-indian-rupee-sign me-2"></i>Price</label>
+                                        <input type="number" name="bookprice" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-layer-group me-2"></i>Quantity</label>
+                                        <input type="number" name="bookquantity" placeholder="10" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-align-left me-2"></i>Description</label>
+                                        <textarea name="bookdetail" placeholder="Short description of the book..." rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-actions mt-4 pt-3" style="border-top: 1px solid var(--glass-border)">
+                                <button type="button" class="secondary-btn" onclick="showSection('books')" style="max-width: 150px;">Cancel</button>
+                                <button type="submit" class="primary-btn">Save Book</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Section: Edit Book -->
+                <div id="section-edit-book" class="dashboard-section d-none">
+                    <button class="back-btn mb-4" onclick="showSection('books')">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Catalog
+                    </button>
+                    <div class="glass-card p-4 p-md-5 mx-auto" style="max-width: 900px;">
+                        <div class="modal-header-custom mb-4">
+                            <h2 class="m-0" style="font-family: 'Outfit', sans-serif;">
+                                <i class="fas fa-edit me-3" style="color: var(--primary)"></i>Modify Book Details
+                            </h2>
+                            <p class="text-dim mt-2">Update information for the selected library asset</p>
+                        </div>
+                        <form id="edit-book-form" enctype="multipart/form-data">
+                            <input type="hidden" name="id" id="edit-book-id">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-hashtag me-2"></i>Serial Number</label>
+                                        <input type="text" name="serial" id="edit-book-serial" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-book me-2"></i>Book Name</label>
+                                        <input type="text" name="bookname" id="edit-book-name" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-image me-2"></i>Update Cover (Photo OR URL)</label>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <div style="flex: 1">
+                                                <input type="file" name="bookphoto" id="edit-book-photo" accept="image/*" class="form-control-sm">
+                                            </div>
+                                            <span class="badge bg-secondary">OR</span>
+                                            <div style="flex: 1">
+                                                <input type="text" name="bookpic" id="edit-book-pic" placeholder="https://image-url.com">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-user-pen me-2"></i>Author</label>
+                                        <input type="text" name="bookaudor" id="edit-book-author" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-building me-2"></i>Publisher</label>
+                                        <input type="text" name="bookpub" id="edit-book-pub">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-code-branch me-2"></i>Branch</label>
+                                        <input type="text" name="branch" id="edit-book-branch">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-indian-rupee-sign me-2"></i>Price</label>
+                                        <input type="number" name="bookprice" id="edit-book-price">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-layer-group me-2"></i>Quantity</label>
+                                        <input type="number" name="bookquantity" id="edit-book-quantity" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <label><i class="fas fa-align-left me-2"></i>Description</label>
+                                        <textarea name="bookdetail" id="edit-book-detail" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-actions mt-4 pt-3" style="border-top: 1px solid var(--glass-border)">
+                                <button type="button" class="secondary-btn" onclick="showSection('books')" style="max-width: 150px;">Cancel</button>
+                                <button type="submit" class="primary-btn">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Section: Advanced Search -->
+                <div id="section-search" class="dashboard-section d-none">
+                    <div class="search-page-header glass-card p-4 mb-4">
+                        <h2 class="mb-3" style="font-family: 'Outfit', sans-serif;"><i class="fas fa-search me-2" style="color: var(--primary)"></i>Advanced Book Search</h2>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" id="adv-search-title" placeholder="Book Title...">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="adv-search-author" placeholder="Author...">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="adv-search-branch" placeholder="Branch (e.g. CS, IT)...">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="primary-btn w-100" onclick="performAdvancedSearch()">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-grid" id="search-results-list"></div>
+                    <div id="search-pagination"></div>
+                </div>
+
+                <!-- Section: Book Detail -->
+                <div id="section-bookdetail" class="dashboard-section d-none">
+                    <button class="back-btn" onclick="showSection('books')">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Catalog
+                    </button>
+                    <div class="book-detail-container">
+                        <div class="book-detail-cover glass-card">
+                            <img id="detail-book-img" src="" alt="Book Cover">
+                        </div>
+                        <div class="book-detail-info">
+                            <div class="book-detail-badges">
+                                <span class="badge-serial" id="detail-book-serial">#SN001</span>
+                                <span class="badge-branch" id="detail-book-branch">General</span>
+                            </div>
+                            <h1 id="detail-book-name">Book Name</h1>
+                            <p class="book-detail-author" id="detail-book-author">
+                                <i class="fas fa-user-pen me-2"></i><span></span>
+                            </p>
+                            <p class="book-detail-publisher" id="detail-book-publisher">
+                                <i class="fas fa-building me-2"></i><span></span>
+                            </p>
+                            <div class="book-detail-description glass-card" id="detail-book-description">
+                                <h4><i class="fas fa-align-left me-2"></i>Description</h4>
+                                <p></p>
+                            </div>
+                            <div class="book-detail-meta">
+                                <div class="meta-item glass-card">
+                                    <span class="meta-label">Price</span>
+                                    <span class="meta-value" id="detail-book-price">₹0</span>
+                                </div>
+                                <div class="meta-item glass-card">
+                                    <span class="meta-label">Total Copies</span>
+                                    <span class="meta-value" id="detail-book-quantity">0</span>
+                                </div>
+                                <div class="meta-item glass-card">
+                                    <span class="meta-label">Available</span>
+                                    <span class="meta-value text-success" id="detail-book-available">0</span>
+                                </div>
+                                <div class="meta-item glass-card">
+                                    <span class="meta-label">Issued</span>
+                                    <span class="meta-value text-warning" id="detail-book-issued">0</span>
+                                </div>
+                            </div>
+                            <div class="book-detail-actions" id="detail-book-actions"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Section: Users -->
+                <div id="section-users" class="dashboard-section d-none">
+                    <div class="section-header">
+                        <h2>Student Management</h2>
+                        <button class="primary-btn" onclick="toggleModal('add-user-modal')">+ Add Student</button>
+                    </div>
+                    <div class="table-container glass-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="users-pagination"></div>
+                </div>
+
+                <!-- Section: Admins (Super Admin Only) -->
+                <div id="section-admins" class="dashboard-section d-none">
+                    <div class="section-header">
+                        <h2>Admin Management</h2>
+                        <button class="primary-btn" onclick="toggleModal('add-admin-modal')">+ Add Admin</button>
+                    </div>
+                    <div class="table-container glass-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="admins-pagination"></div>
+                </div>
+
+                <!-- Section: Requests -->
+                <div id="section-requests" class="dashboard-section d-none">
+                    <h2>Pending Requests</h2>
+                    <div class="table-container glass-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Book</th>
+                                    <th>Days</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="request-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="requests-pagination"></div>
+                </div>
+
+                <!-- Section: My Books -->
+                <div id="section-mybooks" class="dashboard-section d-none">
+                    <h2>My Issued Books</h2>
+                    <div class="table-container glass-card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Book Name</th>
+                                    <th>Issue Date</th>
+                                    <th>Return Date</th>
+                                    <th>Fine</th>
+                                </tr>
+                            </thead>
+                            <tbody id="my-books-table-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="mybooks-pagination"></div>
+                </div>
+            </main>
+            
+            <%- include('partials/footer') %>
+        </section>
+
+    </div><!-- end #app -->
+
+
+    <div id="add-user-modal" class="modal d-none">
+        <div class="modal-content glass-card">
+            <h2>Add New Student</h2>
+            <form id="add-user-form">
+                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <div class="password-wrapper mb-3">
+                    <input type="password" name="pass" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+                <select name="type">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" onclick="toggleModal('add-user-modal')">Cancel</button>
+                    <button type="submit" class="primary-btn">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-admin-modal" class="modal d-none">
+        <div class="modal-content glass-card">
+            <h2>Add New Admin</h2>
+            <form id="add-admin-form">
+                <input type="email" name="email" placeholder="Admin Email" required>
+                <div class="password-wrapper mb-3">
+                    <input type="password" name="pass" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" onclick="toggleModal('add-admin-modal')">Cancel</button>
+                    <button type="submit" class="primary-btn">Add Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <div id="liveToast" class="toast glass-card border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header border-0 bg-transparent text-white">
+                <i class="fas fa-info-circle me-2 text-primary" id="toast-icon"></i>
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message" style="color: var(--text-main);">
+                Message content goes here.
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader Overlay -->
+    <div id="loader-overlay" class="loader-overlay d-none">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-white fw-bold">Processing...</p>
+    </div>
+
+    <%- include('partials/scripts') %>
+</body>
+</html>

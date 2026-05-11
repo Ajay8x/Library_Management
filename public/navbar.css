@@ -1,0 +1,51 @@
+/* Navbar Styles */
+.nav-link {
+    color: var(--text-dim);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary) !important;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.navbar-toggler {
+    padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+/* Light Mode Navbar Styles */
+.light-mode .navbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.light-mode .navbar-toggler {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1.5px solid var(--primary) !important;
+    border-radius: 12px !important;
+    padding: 6px 10px !important;
+}
+
+.light-mode .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2899, 102, 241, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+.light-mode .nav-link {
+    color: #475569 !important;
+}
+
+.light-mode .navbar-brand span {
+    background: linear-gradient(to right, #1e293b, #475569) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+}
+
+.light-mode #user-name-nav {
+    color: #1e293b !important;
+}
